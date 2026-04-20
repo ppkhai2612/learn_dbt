@@ -10,9 +10,9 @@ NUM_ORDERS = 5000
 DB_CONFIG = {
     "host": "localhost",
     "port": 5432,
-    "dbname": "postgres",
-    "user": "postgres",
-    "password": "your_password"
+    "dbname": "raw",
+    "user": "khai",
+    "password": "khai2612"
 }
 
 fake = Faker()
@@ -78,7 +78,7 @@ def insert_data(cur):
         """, orders)
 
         conn.commit()
-        print(" Data inserted successfully")
+        print("Data inserted successfully")
 
     except Exception as e:
         conn.rollback()
