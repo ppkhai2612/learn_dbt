@@ -66,8 +66,8 @@ Here I choose **PostgreSQL** as a data platform because I'm quite familiar with 
         - `dbt_project.yml` file, which contains important information that tells dbt how to operate your project
         - `profiles.yml` file, which stores database connection credentials and configuration for dbt projects
 
-2. `docker run --name postgres-dbt -e POSTGRES_PASSWORD=your_password -d -p 5432:5432 -v postgres-data:/var/lib/postgresql/data postgres:16`
-    - Starting a Postgres instance with default user and database is `postgres`
+2. `docker run --name postgres-dbt -e POSTGRES_USER=khai -e POSTGRES_PASSWORD=your_password -e POSTGRES_DB=raw -d -p 5432:5432 -v postgres-data:/var/lib/postgresql/data postgres:16`
+    - Starting a Postgres instance with user named `khai` and database named `raw` (default to both are `postgres`)
     - `dbt debug`: test the database connection
 
         ![](../images/dbt_debug.png)
@@ -80,24 +80,24 @@ Here I choose **PostgreSQL** as a data platform because I'm quite familiar with 
 
 4. **Commit and push the changes**
 
-- Create a repo on Github
-- Then, enter the following commands
+    - Create a repo on Github
+    - Then, enter the following commands
 
-    ```bash
-    git init
-    git branch -M main
-    git add .
-    git commit -m "Init a dbt project"
-    git remote add origin github_repo_url
-    git push -u origin main
-    ```
+        ```bash
+        git init
+        git branch -M main
+        git add .
+        git commit -m "Init a dbt project"
+        git remote add origin github_repo_url
+        git push -u origin main
+        ```
 
 ### Build First dbt Model
 
 **Setup**
 
 - Check out a new git branch to work on new code: `git checkout -b add-customers-model`
-- Run a setup script (ensure PostgreSQL instance is running): `python3 setup.py`
+- Run a setup script (ensure PostgreSQL instance is running): `python3 setup_jaffle.py`
 
 **Run a dbt Project**
 
@@ -122,6 +122,44 @@ Here I choose **PostgreSQL** as a data platform because I'm quite familiar with 
         marts/
         ```
 
+- Next step: follow the steps in [this exercise](https://learn.getdbt.com/learn/course/dbt-fundamentals-vs-code/models-60min/building-your-first-model?page=10)
+    
+    - Run `python3 setup_stripe.py`
 
+### Knowledge Review
 
+**Models**
 
+- SQL files that live in the `models/` folder
+- Models are simply written as `select` statements
+- `dbt run` to materialize the models into the data warehouse (default materialization is view). See [Configuring materializations](https://docs.getdbt.com/docs/build/materializations?version=1.12#configuring-materializations) for more details
+    - When `dbt run` is executing, dbt is wrapping the `select` statement in the correct DDL/DML to build that model as a table/view. If that model already exists in the data warehouse, dbt will automatically drop that table or view before building the new database object. **Note**: If you are on BigQuery, you need to run `dbt run --full-refresh`
+    - The DDL/DML that is being run to build each model can be viewed in the logs through the `target` folder
+
+**Modularity**
+
+- Modularity is the degree to which the system's components may be separated and recombined, it allows us to build data artifacts in logical steps
+- For example, we can stage the raw `customers` and `orders` data, then build a model that references both of these to build the final `dim_customers` model
+
+**ref Macro**
+
+- The `ref` function allows us to build dependencies between models in a flexible way that can be shared in a common code base. The `ref` function compiles to the name of the database object as it has been created on the most recent execution of dbt run in the particular development environment. This is determined by the environment configuration that was set up when the project was created
+- Example: `{{ ref('stg_jaffle_shop__customers') }}` compiles to `raw.dev_jaffle_shop.stg_jaffle_shop__customers` (`raw` is a database name, `dev_jaffle_shop` is a schema name, `stg_jaffle_shop__customers` is an identifier)
+
+**Naming Conventions**
+
+- `src` refer to the raw table data that have been built in the warehouse
+- `stg` refers to models that are built directly on top of sources. These have a one-to-one relationship with sources tables. These are used for very light transformations that shape the data into what you want it to be. **Note**: These are typically materialized as views
+- `int` refers to any models that exist between final fact and dimension tables. These should be built on staging models rather than directly on sources to leverage the data cleaning that was done in staging
+- `fct` refers to any data that represents something that occurred or is occurring. Examples include sessions, transactions, orders, stories, votes
+- `dim` refers to data that represents a person, place or thing. Examples include customers, products, candidates, buildings, employees
+
+**Reorganize Project**
+
+When `dbt run` is executed, dbt will automatically run every model in the `models` directory. The subfolder structure within the `models` directory can be leveraged for organizing the project as the data team sees fit. This can then be leveraged to select certain folders with `dbt run` and the **model selector**. Example: `dbt run -s staging` will run all models that exist in `models/staging`
+
+The following framework can be a starting part for designing your own model organization
+- `marts` folder: All intermediate, fact, and dimension models can be stored here. Further subfolders can be used to separate data by **business function** (e.g. marketing, finance)
+- `staging` folder: All staging models and source configurations can be stored here. Further subfolders can be used to separate data by **data source** (e.g. Stripe, Segment, Salesforce)
+
+### 
