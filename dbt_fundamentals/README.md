@@ -53,7 +53,7 @@ In this demo, you need to set up [VSCode](https://code.visualstudio.com/download
 
 Here I choose **PostgreSQL** as a data platform because I'm quite familiar with it
 
-### Demo Steps
+### First Step Demo
 
 1. `dbt init jaffle_shop`
     - Create a new dbt project named **jaffle_shop**
@@ -66,7 +66,7 @@ Here I choose **PostgreSQL** as a data platform because I'm quite familiar with 
         - `dbt_project.yml` file, which contains important information that tells dbt how to operate your project
         - `profiles.yml` file, which stores database connection credentials and configuration for dbt projects
 
-2. `docker run --name container_name -e POSTGRES_PASSWORD=your_password -d -p 5432:5432 postgres:16`
+2. `docker run --name postgres-dbt -e POSTGRES_PASSWORD=your_password -d -p 5432:5432 -v postgres-data:/var/lib/postgresql/data postgres:16`
     - Starting a Postgres instance with default user and database is `postgres`
     - `dbt debug`: test the database connection
 
@@ -76,4 +76,52 @@ Here I choose **PostgreSQL** as a data platform because I'm quite familiar with 
     - Run the models in the project (defined in `models/`)
     - The result looks like in below
 
-        ![](../images/dbt_run.png)
+        ![](../images/dbt_run_1.png)
+
+4. **Commit and push the changes**
+
+- Create a repo on Github
+- Then, enter the following commands
+
+    ```bash
+    git init
+    git branch -M main
+    git add .
+    git commit -m "Init a dbt project"
+    git remote add origin github_repo_url
+    git push -u origin main
+    ```
+
+### Build First dbt Model
+
+**Setup**
+
+- Check out a new git branch to work on new code: `git checkout -b add-customers-model`
+- Run a setup script (ensure PostgreSQL instance is running): `python3 setup.py`
+
+**Run a dbt Project**
+
+- `dbt run`
+
+    ![](../images/dbt_run_2.png)
+
+- Demystifying the components of dbt project
+
+    - Each dbt model are **materialized**, which is strategies for persisting dbt models in a warehouse (e.g., view, table). Materialization configurations are defined in `dbt_project.yml`
+
+        ![](../images/materialization_config.png)
+
+    - `{{ ref() }}` macro (pieces of code that can be reused multiple times): this function defines how you reference one model within another. Here, `dim_customers.sql` refers to both `stg_jaffle_shop__customers.sql` and `stg_jaffle_shop__orders.sql`
+        
+        ![](../images/ref.png)
+
+    - dbt models are structured according to [this DBT best practice](https://docs.getdbt.com/best-practices/how-we-structure/1-guide-overview)
+
+        ```bash
+        staging/
+        marts/
+        ```
+
+
+
+
