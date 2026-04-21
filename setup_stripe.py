@@ -62,9 +62,9 @@ def insert_data(cur):
 
     try:
         data = generate_data(NUM_ROWS)
-        cur.execute("TRUNCATE stripe.payments;")
+        cur.execute("TRUNCATE stripe.payment;")
         query = """
-            INSERT INTO stripe.payments
+            INSERT INTO stripe.payment
             (id, orderid, paymentmethod, status, amount, created)
             VALUES (%s, %s, %s, %s, %s, %s)
         """

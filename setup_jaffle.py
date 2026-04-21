@@ -1,7 +1,7 @@
 from faker import Faker
 import random
 import psycopg2
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 
 # Configs
 NUM_CUSTOMERS = 1000
@@ -34,8 +34,9 @@ def generate_customers(n):
 # Generate orders
 def generate_orders(n, customer_ids):
     statuses = ["placed", "shipped", "completed", "returned", "returned_pending"]
-
+    load_time = datetime.now(timezone.utc)
     orders = []
+
     for i in range(1, n + 1):
         orders.append((
             i,
@@ -45,7 +46,8 @@ def generate_orders(n, customer_ids):
                 statuses,
                 weights=[0.1, 0.2, 0.65, 0.03, 0.02], # skew realistic
                 k=1
-            )[0]
+            )[0],
+            load_time
         ))
     return orders
 
@@ -58,23 +60,23 @@ def insert_data(cur):
         customer_ids = [c[0] for c in customers]
         orders = generate_orders(NUM_ORDERS, customer_ids)
 
-        # # Clear old data
+        # Clear old data
         cur.execute("""
-            TRUNCATE dev_jaffle_shop.jaffle_shop_orders,
-                    dev_jaffle_shop.jaffle_shop_customers
+            TRUNCATE jaffle_shop.orders,
+                    jaffle_shop.customers
             CASCADE
         """)
 
         # Insert customers
         cur.executemany("""
-            INSERT INTO dev_jaffle_shop.jaffle_shop_customers (id, first_name, last_name)
+            INSERT INTO jaffle_shop.customers (id, first_name, last_name)
             VALUES (%s, %s, %s)
         """, customers)
 
         # Insert orders
         cur.executemany("""
-            INSERT INTO dev_jaffle_shop.jaffle_shop_orders (id, user_id, order_date, status)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO jaffle_shop.orders (id, user_id, order_date, status, _etl_loaded_at)
+            VALUES (%s, %s, %s, %s, %s)
         """, orders)
 
         conn.commit()
@@ -92,11 +94,11 @@ def insert_data(cur):
 def create_table(cur):
 
     cur.execute("""
-        CREATE SCHEMA IF NOT EXISTS dev_jaffle_shop;
+        CREATE SCHEMA IF NOT EXISTS jaffle_shop;
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS dev_jaffle_shop.jaffle_shop_customers (
+        CREATE TABLE IF NOT EXISTS jaffle_shop.customers (
             id INTEGER,
             first_name TEXT,
             last_name TEXT
@@ -104,11 +106,12 @@ def create_table(cur):
     """)
 
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS dev_jaffle_shop.jaffle_shop_orders (
+        CREATE TABLE IF NOT EXISTS jaffle_shop.orders (
             id INTEGER,
             user_id INTEGER,
             order_date DATE,
-            status TEXT
+            status TEXT,
+            _etl_loaded_at TIMESTAMPTZ
         );
     """)
 
