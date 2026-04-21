@@ -162,4 +162,46 @@ The following framework can be a starting part for designing your own model orga
 - `marts` folder: All intermediate, fact, and dimension models can be stored here. Further subfolders can be used to separate data by **business function** (e.g. marketing, finance)
 - `staging` folder: All staging models and source configurations can be stored here. Further subfolders can be used to separate data by **data source** (e.g. Stripe, Segment, Salesforce)
 
-### 
+## Sources
+
+Sources represent the raw data that is loaded into the data warehouse. Although we can reference tables in our models with an explicit table name (`raw.jaffle_shop.customers`). However, setting up Sources in dbt and referring to them with the `source` macro enables
+- Multiple tables from a single source can be configured in one place
+- Sources are easily identified as green nodes in the Lineage Graph
+- You can use `dbt source freshness` to check the freshness of raw tables
+
+For example,
+
+- Given the source configuration
+
+    ```yml
+    sources:
+    name: jaffle_shop
+    database: raw
+    schema: jaffle_shop
+    tables:
+      - name: customers
+      - name: orders
+    ```
+
+- The snippet `{{ source('jaffle_shop','customers') }}` in a model file will compile to `raw.jaffle_shop.customers`
+
+Sources are configured in YML files in the `models` directory. See [Source properties](https://docs.getdbt.com/reference/source-properties?version=1.12) for the full documentation for configuring sources
+
+**Source freshness**: freshness thresholds can be set in the YML file where sources are configured. For each table, the keys `loaded_at_field` and `freshness` must be configured. After configuration completed, run `dbt source freshness`
+
+### Packages
+
+Packages are libraries help programmers operate with leverage: they can spend more time focusing on their unique business logic, and less time implementing code that someone else has already spent the time perfecting
+
+To use packages, add a file named `dependencies.yml` or `packages.yml` to your dbt project (same level as `dbt_project.yml` file). Its content as in [packages.yml](../jaffle_shop/packages.yml). Run `dbt deps` then to install the package(s)
+
+Example of using `generate_source` and `generate_base_model` macros of `dbt-labs/codegen` package
+
+- `dbt run-operation generate_source --args '{"schema_name": "jaffle_shop", "database_name": "raw"}'`
+- `dbt run-operation generate_base_model --args '{"source_name": "jaffle_shop", "table_name": "customers"}'`
+
+## Data Tests
+
+## Documentation
+
+## Deployment
