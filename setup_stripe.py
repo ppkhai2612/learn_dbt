@@ -11,7 +11,7 @@ DB_CONFIG = {
     "port": 5432,
     "dbname": "raw",
     "user": "khai",
-    "password": "khai2612"
+    "password": "khai2612" # replace with your own passowrd
 }
 
 fake = Faker()

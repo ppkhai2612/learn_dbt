@@ -202,6 +202,37 @@ Example of using `generate_source` and `generate_base_model` macros of `dbt-labs
 
 ## Data Tests
 
+**Testing** is used in software engineering to make sure that the code does what we expect it to. In dbt, tests are written as `select` statements. These `select` statements are run against your materialized models to ensure they meet your assertions
+
+In dbt, there are two types of tests
+
+- **Generic tests** are a way to validate your data models and ensure data quality. These tests are predefined and can be applied to any column of your data models to check for common data issues. They are written in YAML files
+- **Singular tests** are data tests defined by writing specific SQL queries that return records which fail the test conditions. These tests are referred to as "singular" because they are one-off assertions that are uniquely designed for a single purpose or specific scenario within the data models
+
+dbt ships with four built in tests: `unique`, `not null`, `accepted values`, `relationships`. See [Out-of-the-box data tests](https://docs.getdbt.com/reference/resource-properties/data-tests?version=1.12#out-of-the-box-data-tests)
+
+Tests can be run against your current project using a range of commands
+
+    ```bash
+    dbt test runs all tests in the dbt project
+    dbt test --select test_type:generic
+    dbt test --select test_type:singular
+    dbt test --select one_specific_model
+    dbt test -s source:jaffle_shop
+    ```
+
+Read more here in [Test selection examples](https://docs.getdbt.com/reference/node-selection/test-selection-examples?version=1.12)
+
+In development, dbt will provide a visual for your test results. Each test produces a log that you can view to investigate the test results further
+
+### dbt build
+
+`dbt build`: combines the 4 following commands
+- `dbt run`: executes compiled SQL model files against the current **target** database
+- `dbt test`: runs data tests defined on models, sources, snapshots, and seeds and unit tests defined on SQL models
+- `dbt snapshot`: executes the snapshots defined in project
+- `dbt seed`: loads static CSV files from your project’s `seed-paths` into your data warehouse as tables
+
 ## Documentation
 
 ## Deployment
