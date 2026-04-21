@@ -235,4 +235,19 @@ In development, dbt will provide a visual for your test results. Each test produ
 
 ## Documentation
 
-## Deployment
+**Documentation** empowers users to self-service questions about data and enables new team members to on-board quickly. In dbt, models are built in SQL files. These models are documented in **YML files** that live in the same folder as the models. For models, descriptions can happen at the model, source, or column level. If a longer form, more styled version of text would provide a strong description, **doc blocks** can be used to render markdown in the generated documentation
+
+After docs are defined, run
+
+```bash
+dbt docs generate
+dbt docs serve
+```
+
+It will automatically open a UI where we can see the documents we have defined
+
+## Development vs. Deployment
+
+- **Development** in dbt is the process of building, refactoring, and organizing different files in your dbt project. This is done in a development environment using a development schema (`dbt_jsmith`) and typically on a non-default branch (i.e. `feature/customers-model`, `fix/date-spine-issue`). After making the appropriate changes, the development branch is merged to `main`/`master` so that those changes can be used in deployment
+
+- **Deployment** in dbt (or running dbt in production) is the process of running dbt on a schedule in a deployment environment. The deployment environment will typically run from the default branch (i.e., `main`, `master`) and use a dedicated deployment schema (e.g., `dbt_prod`). The models built in deployment are then used to power dashboards, reporting, and other key business decision-making processes
