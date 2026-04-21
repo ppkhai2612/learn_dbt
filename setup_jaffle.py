@@ -12,7 +12,7 @@ DB_CONFIG = {
     "port": 5432,
     "dbname": "raw",
     "user": "khai",
-    "password": "khai2612"
+    "password": "khai2612" # replace with your own passowrd
 }
 
 fake = Faker()
@@ -33,7 +33,7 @@ def generate_customers(n):
 
 # Generate orders
 def generate_orders(n, customer_ids):
-    statuses = ["placed", "shipped", "completed", "returned", "returned_pending"]
+    statuses = ["placed", "shipped", "completed", "returned", "return_pending"]
     load_time = datetime.now(timezone.utc)
     orders = []
 
